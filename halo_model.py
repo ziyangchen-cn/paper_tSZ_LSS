@@ -30,11 +30,11 @@ from dynesty import plotting as dyplot
 import camb
 from camb import model, initialpower
 
-
+a=0
 class halo_model():
     def __init__(self, redshift = 0,lgk_min = -3,lgk_max = 2,lgk_nbin = 100,
                  lgM_min = 8,lgM_max = 16,lgM_nbin = 100,
-                 lgx_min = -3,lgx_max = 3,lgx_nbin = 2000,
+                 lgx_min = -3,lgx_max = 3,lgx_nbin = 2000,R_cut=10, 
                  mdef = "500c",bias_model = 'tinker10',hmf_model = 'tinker08',gnfw_model = "Planck13", cosmo_model = "planck15",
                  mass_bias=0, alpha_p=0.12,
                  pk_lin = 0, dndlgM=0):
@@ -65,7 +65,7 @@ class halo_model():
             R500 = mass_so.M_to_R(M = 10**lgM_bins[i], z = redshift, mdef = mdef) # kpc/h physical
             r = x*R500/1000*(1+redshift)  # Mpc/h comoving
             
-            rho_pe = self.pressure_profile_gNFW(x=x, M500=10**lgM_bins[i], z=redshift, model=gnfw_model, mass_bias=mass_bias, alpha_p=alpha_p)
+            rho_pe = self.pressure_profile_gNFW(x=x, M500=10**lgM_bins[i], z=redshift, model=gnfw_model, mass_bias=mass_bias, alpha_p=alpha_p, R_cut=R_cut)
             rho_m  = self.dm_profile_NFW(r=r, M=10**lgM_bins[i], z = redshift, mdef = mdef) #M_sun/h / (Mpc/h)^3
             
             
@@ -144,7 +144,7 @@ class halo_model():
 
         return p_nfw 
     
-    def pressure_profile_gNFW(self, x, M500, z, model, mass_bias, alpha_p):
+    def pressure_profile_gNFW(self, x, M500, z, model, mass_bias, alpha_p, R_cut):
         '''
         x = r/R500 np.array
         M500: M_sun/h 
@@ -183,6 +183,8 @@ class halo_model():
 
         #P_x
         P_x = P0/((c500*x)**gamma * (1+(c500*x)**alpha)**((beta-gamma)/alpha))
+        
+        P_x[np.where(x>R_cut)]=0
 
 
         return P_500 * P_x *10**6 #mev/cm3      
@@ -202,6 +204,4 @@ class halo_model():
 
         return W #len(k)
  
-        
-
-
+    
